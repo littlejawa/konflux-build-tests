@@ -1,3 +1,6 @@
 [submodule "cloud-api-adaptor"]
 	path = cloud-api-adaptor
 	url = https://github.com/confidential-containers/cloud-api-adaptor
+[submodule "guest-components"]
+	path = guest-components
+	url = https://github.com/confidential-containers/guest-components
