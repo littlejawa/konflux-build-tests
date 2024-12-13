@@ -1,0 +1,26 @@
+ARG BUILDER_BASE=registry.access.redhat.com/ubi9/go-toolset:1.22.7-1733160835
+ARG BASE=registry.access.redhat.com/ubi9/ubi-minimal:latest
+ARG CAA_SRC=cloud-api-adaptor/src
+
+FROM $BUILDER_BASE AS builder
+RUN dnf install -y libvirt-devel && dnf clean all
+RUN go install github.com/mikefarah/yq/v4@$YQ_VERSION
+
+WORKDIR /work
+COPY $CAA_SRC/cloud-api-adaptor/go.mod $CAA_SRC/cloud-api-adaptor/go.sum ./cloud-api-adaptor/
+COPY $CAA_SRC/cloud-providers ./cloud-providers
+COPY $CAA_SRC/peerpod-ctrl ./peerpod-ctrl
+WORKDIR /work/cloud-api-adaptor
+RUN go mod download
+COPY $CAA_SRC/cloud-api-adaptor/entrypoint.sh $CAA_SRC/cloud-api-adaptor/Makefile $CAA_SRC/cloud-api-adaptor/Makefile.defaults $CAA_SRC/cloud-api-adaptor/versions.yaml ./
+COPY $CAA_SRC/cloud-api-adaptor/hack  ./hack
+COPY $CAA_SRC/cloud-api-adaptor/cmd   ./cmd
+COPY $CAA_SRC/cloud-api-adaptor/pkg   ./pkg
+COPY $CAA_SRC/cloud-api-adaptor/proto ./proto
+
+RUN CC=gcc make ARCH=$TARGETARCH COMMIT=$COMMIT VERSION=$VERSION RELEASE_BUILD=$RELEASE_BUILD cloud-api-adaptor
+
+FROM $BASE
+RUN dnf install -y libvirt-libs /usr/bin/ssh && dnf clean all
+COPY --from=builder /work/cloud-api-adaptor/cloud-api-adaptor /work/cloud-api-adaptor/entrypoint.sh /usr/local/bin/
+CMD ["entrypoint.sh"]
