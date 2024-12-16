@@ -1,10 +1,14 @@
-ARG BUILDER_BASE=registry.access.redhat.com/ubi9/go-toolset:1.22.7-1733160835
-ARG BASE=registry.access.redhat.com/ubi9/ubi-minimal:latest
-ARG CAA_SRC=cloud-api-adaptor/src
+# FIXME: tried to use ubi9 images, but could not install libvirt packages (?)
+# Need to find how to properly install that, or use other images instead.
+# Using fedora for now, as done upstream
+ARG BUILDER=quay.io/confidential-containers/golang-fedora:1.22.7-39
+ARG BASE=registry.fedoraproject.org/fedora:39
 
-FROM $BUILDER_BASE AS builder
+FROM $BUILDER AS builder
+ARG CAA_SRC=cloud-api-adaptor/src
+USER root
 RUN dnf install -y libvirt-devel && dnf clean all
-RUN go install github.com/mikefarah/yq/v4@$YQ_VERSION
+RUN go install github.com/mikefarah/yq/v4@v4.35.1
 
 WORKDIR /work
 COPY $CAA_SRC/cloud-api-adaptor/go.mod $CAA_SRC/cloud-api-adaptor/go.sum ./cloud-api-adaptor/
@@ -18,7 +22,9 @@ COPY $CAA_SRC/cloud-api-adaptor/cmd   ./cmd
 COPY $CAA_SRC/cloud-api-adaptor/pkg   ./pkg
 COPY $CAA_SRC/cloud-api-adaptor/proto ./proto
 
-RUN CC=gcc make ARCH=$TARGETARCH COMMIT=$COMMIT VERSION=$VERSION RELEASE_BUILD=$RELEASE_BUILD cloud-api-adaptor
+RUN CGO_ENABLED=1 GOOS=linux go build \
+    -tags=strictfipsruntime,aws,azure,ibmcloud,vsphere,libvirt \
+	-o cloud-api-adaptor ./cmd/cloud-api-adaptor
 
 FROM $BASE
 RUN dnf install -y libvirt-libs /usr/bin/ssh && dnf clean all
