@@ -30,3 +30,4 @@ FROM $BASE
 RUN dnf install -y libvirt-libs /usr/bin/ssh && dnf clean all
 COPY --from=builder /work/cloud-api-adaptor/cloud-api-adaptor /work/cloud-api-adaptor/entrypoint.sh /usr/local/bin/
 CMD ["entrypoint.sh"]
+
