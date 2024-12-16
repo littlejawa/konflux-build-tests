@@ -2,7 +2,7 @@
 # Need to find how to properly install that, or use other images instead.
 # Using fedora for now, as done upstream
 ARG BUILDER=quay.io/confidential-containers/golang-fedora:1.22.7-39
-ARG BASE=registry.fedoraproject.org/fedora:39
+ARG BASE=registry.fedoraproject.org/fedora:42
 
 FROM $BUILDER AS builder
 ARG CAA_SRC=cloud-api-adaptor/src
