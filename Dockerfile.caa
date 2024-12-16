@@ -1,4 +1,4 @@
-ARG BUILDER_BASE=registry.access.redhat.com/ubi9/go-toolset:1.22.7-1733160835
+ARG BUILDER_BASE=registry.access.redhat.com/ubi9/go-toolset:9.5-1733160835
 ARG BASE=registry.access.redhat.com/ubi9/ubi-minimal:latest
 ARG CAA_SRC=cloud-api-adaptor/src
 
